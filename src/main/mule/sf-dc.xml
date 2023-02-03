@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="67b4f104-fc46-483b-81dd-84b5fa8c8799" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="fc5b0095-e0f3-4b53-abc7-a83ee1d0aaf0" >
+		<salesforce:basic-connection username="samabasivarao@apicentrics.com" password="Dream2Big" securityToken="BifmolJKALITOoNOtnXYbux9d" />
+	</salesforce:sfdc-config>
+	<flow name="sf-dcFlow" doc:id="09a1701d-1c36-4b4f-bd76-39e915cec1a8" >
+		<http:listener doc:name="Listener" doc:id="929baa11-2636-445a-b8ef-4230d89b35dc" config-ref="HTTP_Listener_config" path="/getall"/>
+		<salesforce:query-all doc:name="Query all" doc:id="cd67ece6-c335-4c13-a792-5abcc74bb3cb" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT empid__c,emp_name__c,sal__c FROM siva__c]]></salesforce:salesforce-query>
+		</salesforce:query-all>
+		<ee:transform doc:name="Transform Message" doc:id="43ddd2a8-aefa-4507-99b3-9113670bf780" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-dcFlow1" doc:id="b6275f68-a117-4a04-b89e-e78a938eeb33" >
+		<http:listener doc:name="Listener" doc:id="e8c71ac8-eb2a-4d7a-a8aa-b2ab01c2471b" config-ref="HTTP_Listener_config" path="/get"/>
+		<salesforce:query doc:name="Query" doc:id="571a9232-0fc3-4350-b2a0-e8e8c2f2d9ff" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT empid__c,emp_name__c,sal__c FROM siva__c ]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="33c190de-22e9-489e-a858-6ae9df82d085" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-dcFlow2" doc:id="17f41685-73a6-48de-a92c-224dcd06d258" >
+		<http:listener doc:name="Listener" doc:id="6ec825e9-ee81-4386-af2d-0710222ff6ee" config-ref="HTTP_Listener_config" path="/insert"/>
+		<ee:transform doc:name="Transform Message" doc:id="08bbe9b0-7024-4c72-8000-2e1be8119922" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[
+	{
+        empid__c : 3,
+        emp_name__c : "rao",
+        sal__c : 25000
+     }     
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="siva__c" doc:name="Create" doc:id="d07efc34-9e5c-4ee8-9a40-658b12b96377" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="3ec38acf-7410-4ac7-9283-1662a6adb17a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-dcFlow3" doc:id="7f13d9c9-016c-4347-9eab-060b281e04ac" >
+		<http:listener doc:name="Listener" doc:id="c50f3ef2-0817-4a49-8ff5-4c39c5241035" config-ref="HTTP_Listener_config" path="/upsert"/>
+		<ee:transform doc:name="Transform Message" doc:id="a909d152-427f-4be1-a45a-08b52ccc98b9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+[
+	{
+        empid__c : 3,
+        emp_name__c : "suba",
+        sal__c : 300000
+     },
+     {
+        empid__c : 4,
+        emp_name__c : "sankar",
+        sal__c : 586562
+     }     
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="2405df7f-9a6b-4d99-99e4-ca55df69d3ff" config-ref="Salesforce_Config" objectType="siva__c" externalIdFieldName="empid__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="22145771-0966-4c2e-8893-5eb3ebad4ad1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-dcFlow4" doc:id="8f46ba2e-dc22-457e-8017-c58625801584" >
+		<salesforce:replay-channel-listener streamingChannel="/data/siva__ChangeEvent" replayOption="ONLY_NEW" doc:name="Replay channel listener" doc:id="317f9b60-f90b-4890-8b51-94644b93c32c" config-ref="Salesforce_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4043a712-23ad-45ea-a922-03b02818f381" message="#[%dw 2.0&#10;output application/json&#10;---&#10;attributes]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7cc9fc28-b894-492a-8c80-68ce92bb2209" message="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="47c1faec-eeed-4abb-9f14-c82572c7c821" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
